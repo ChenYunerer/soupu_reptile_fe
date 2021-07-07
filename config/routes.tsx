@@ -19,6 +19,11 @@ export default [
         component: '@/pages/taskScoreList',
       },
       {
+        path: '/taskTopListDetailList',
+        name: '爬虫榜单信息',
+        component: '@/pages/taskTopListDetailList',
+      },
+      {
         path: '/scoreSearch',
         name: '曲谱搜索',
         component: '@/pages/scoreSearch',

@@ -1,22 +1,48 @@
 import React, { Component } from 'react';
-import { Button, Collapse, Descriptions, message } from 'antd';
+import { Button, Collapse, Descriptions, message, Select } from 'antd';
 import axios from 'axios';
 import styles from './taskList.less';
 import { history } from 'umi';
 
 const { Panel } = Collapse;
+const { Option } = Select;
 
 class TaskList extends Component {
 
   state = {
+    taskType: '',
     topTaskList: [],
   };
+
+  selectInfo = [
+    {
+      name: '所有',
+      value: '',
+    },
+    {
+      name: '中国曲谱网爬虫任务',
+      value: '1',
+    },
+    {
+      name: '网易云榜单任务',
+      value: '2',
+    },
+  ];
 
   taskStatus = new Map([[-1, '失败'], [0, '初始化'], [1, '处理中'], [2, '成功']]);
 
 
   componentDidMount() {
-    axios.get('/admin/api/getTopTaskList').then((httpResponse) => {
+    this.getTaskListInfo();
+  }
+
+  getTaskListInfo() {
+    const { taskType } = this.state;
+    axios.get('/admin/api/getTopTaskList', {
+      params: {
+        taskType: taskType,
+      },
+    }).then((httpResponse) => {
       this.setState({ topTaskList: httpResponse.data.data });
     }).catch((error) => {
       console.log('error', error);
@@ -25,15 +51,18 @@ class TaskList extends Component {
   }
 
   renderCollapse(taskInfoWithSubChildList) {
-    if (taskInfoWithSubChildList && taskInfoWithSubChildList.length === 0) {
+    if (!taskInfoWithSubChildList || taskInfoWithSubChildList.length === 0) {
       return null;
     }
 
-    const getOnClick = (topTaskId) => {
+    const getOnClick = (topTaskInfo) => {
       return (e) => {
         e.stopPropagation();
-        console.log('e', e);
-        history.push('/taskScoreList?topTaskId=' + topTaskId);
+        if (topTaskInfo.taskType === 1) {
+          history.push('/taskScoreList?topTaskId=' + topTaskInfo.topTaskId);
+        } else if (topTaskInfo.taskType === 2) {
+          history.push('/taskTopListDetailList?topTaskId=' + topTaskInfo.topTaskId);
+        }
       };
     };
 
@@ -45,7 +74,7 @@ class TaskList extends Component {
               <span className={styles.title}>
                 {item.taskName + ' · ' + this.taskStatus.get(item.taskStatus)}
                 {item.taskId === item.topTaskId ? <Button style={{ marginLeft: 20 }} size={'small'}
-                                                          onClick={getOnClick(item.topTaskId)}>查看数据</Button> : null}
+                                                          onClick={getOnClick(item)}>查看数据</Button> : null}
               </span>
             }
                           key={item.taskId} className={styles.Panel}>
@@ -68,9 +97,27 @@ class TaskList extends Component {
     );
   }
 
+
   render() {
+    const handleChange = (value) => {
+      this.state.taskType = value;
+      this.getTaskListInfo();
+    };
+
     const { topTaskList } = this.state;
-    return this.renderCollapse(topTaskList);
+    return <>
+      <div>
+        <span>任务类型: </span>
+        <Select defaultValue={this.selectInfo[0].name} style={{ width: 300 }} onChange={handleChange}>
+          {this.selectInfo.map(item => {
+            return <Option value={item.value}>{item.name}</Option>;
+          })}
+        </Select>
+      </div>
+      <div style={{ marginTop: 20 }} />
+      {this.renderCollapse(topTaskList)}
+    </>
+      ;
   }
 }
 
