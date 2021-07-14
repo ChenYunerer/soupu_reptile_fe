@@ -24,7 +24,7 @@ class TaskTopListDetailList extends Component {
     const { topListDateList } = this.state;
     axios.get('/admin/api/getTopListAllDate').then((httpResponse) => {
 
-      topListDateList.push(httpResponse.data.data);
+      topListDateList.push(...httpResponse.data.data);
       this.setState({ topListDateList: topListDateList });
 
     }).catch((error) => {
@@ -34,7 +34,7 @@ class TaskTopListDetailList extends Component {
 
   render() {
     const { topListDetailInfoList, topTaskId, topListDateList } = this.state;
-
+    console.log('topListDateList', topListDateList);
     const onChange = (e) => {
       this.setState({ topTaskId: e.target.value });
     };
